@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "spi.h"
 
+
 void SPI_PortInit()//Potentially make this more configurable and less hard coded....?
 {
     SPI_TXWrtIndex = 0; //Resetting indexes for buffer operation
@@ -22,24 +23,22 @@ void SPI_PortInit()//Potentially make this more configurable and less hard coded
     //EUSCI_A3->CTLW0 = 0xEDC3;
 
     EUSCI_A3->CTLW0 = EUSCI_A_CTLW0_SWRST | //bit1 0, bit6,7 10, bit8 1, bit9,10 10, bit11 1, bit12 0, bit13 1, bit14, 15 00
-            EUSCI_A_CTLW0_TXBRK |           //STE used for enable, SMCLK, Synchronous, 4-pin SPI active low,
+            //EUSCI_A_CTLW0_TXBRK |           //STE used for enable, SMCLK, Synchronous, 4-pin SPI active low,
             EUSCI_A_CTLW0_SSEL__SMCLK |     //Master mode, 8-bit data, MSB first, SPI mode 0
             EUSCI_A_CTLW0_SYNC|
-            EUSCI_A_CTLW0_MODE_2 |
+            //EUSCI_A_CTLW0_MODE_2 |
             EUSCI_A_CTLW0_MST |
-            EUSCI_A_CTLW0_MSB;
+            EUSCI_A_CTLW0_MSB |
+            EUSCI_A_CTLW0_CKPL;
 
 
     EUSCI_A3->BRW = 1;      //3MHz
     EUSCI_A3->CTLW0 &= ~0x01;   //Re-enable UCA3 after config
 
-    P9->SEL1 &= ~0xF0;
-    P9->SEL0 |=  0xF0;//Configure UCA3 pins in SPI3 for SPI communication
-    //P9->DIR  &= ~0xF0;
-    //P9->DIR |= BIT4;
-    //P9->OUT  |=  0xF0;
-
-
+    P9->SEL1 &= ~0xE0;
+    P9->SEL0 |=  0xE0; //Configure UCA3 pins in SPI3 for SPI communication
+    P9->DIR |= 0x10;
+    P9->OUT |= 0x10;   //Configure chip select pin
 
     //Led for debugging
     P1->OUT &= ~BIT0;
@@ -71,10 +70,11 @@ int SPI_SendCommand(uint8_t cmd)
 
     P1->OUT ^= BIT0; //Toggle LED for debugging
     P9->OUT &= ~BIT4;
+
     EUSCI_A3->TXBUF = cmd; //Should send a single byte
 
     while(!(EUSCI_A3->IFG & EUSCI_A_IFG_TXIFG));
-    P9->OUT |= BIT4;
+    //P9->OUT |= BIT4;
 
     return 0;
 }
@@ -100,6 +100,7 @@ int SPI_SendData(uint16_t byteCount, uint8_t * dataPointer)
     return 0; //No error reporting yet
 }
 
+//Needs to be fixed
 int SPI_ReadByte(uint8_t * rxData)
 {
     if(!EUSCI_A3->RXBUF)
@@ -112,6 +113,7 @@ int SPI_ReadByte(uint8_t * rxData)
     return 0;
 }
 
+//Needs to be fixed
 int SPI_ReadData(uint8_t rxData[])
 {
     if(SPI_RXFlag)

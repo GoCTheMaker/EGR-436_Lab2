@@ -16,6 +16,9 @@ int SPI_SendData(uint16_t byteCount, uint8_t * dataPointer);
 int SPI_ReadByte(uint8_t * rxData);
 int SPI_ReadData(uint8_t rxData[]);
 
+//Macros
+#define CLOCK_IN 0x00
+
 
 
 #endif /* SPI_H_ */
