@@ -56,8 +56,9 @@ int SPI_SendByte(uint8_t txData)
     //Check to see if SPI is busy
     //If so return busy code
     P1->OUT ^= BIT0; //Toggle LED for debugging
-
     EUSCI_A3->TXBUF = txData;
+    while(!SPI_TXFlag);
+    SPI_TXFlag = 0;
     return 0;
 }
 
@@ -103,13 +104,9 @@ int SPI_SendData(uint16_t byteCount, uint8_t * dataPointer)
 //Needs to be fixed
 int SPI_ReadByte(uint8_t * rxData)
 {
-    if(!EUSCI_A3->RXBUF)
-    {
-        return -1; //No data in buffer
-    }
 
     *rxData = EUSCI_A3->RXBUF;
-
+    SPI_RXFlag = NO;
     return 0;
 }
 

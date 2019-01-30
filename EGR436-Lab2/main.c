@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "spi.h"
 #include "flash.h"
+#include <stdio.h>
 
 
 /**
@@ -12,6 +13,13 @@ void main(void)
     uint32_t test;
 	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
 	InitHardware();
+
+	uint8_t data[25];
+	sprintf(data, "test2");
+
+	Flash_ReadIndex();
+	Flash_FormatDevice();
+	Flash_ReadIndex();
 
 	while(1)
 	{
