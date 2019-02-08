@@ -28,8 +28,10 @@ void SPI_PortInit()//Potentially make this more configurable and less hard coded
             EUSCI_A_CTLW0_SYNC|
             //EUSCI_A_CTLW0_MODE_2 |
             EUSCI_A_CTLW0_MST |
-            EUSCI_A_CTLW0_MSB |
-            EUSCI_A_CTLW0_CKPL;
+            EUSCI_A_CTLW0_MSB|
+            //EUSCI_A_CTLW0_CKPL|
+            EUSCI_A_CTLW0_CKPH
+            ;
 
 
     EUSCI_A3->BRW = 1;      //3MHz
@@ -55,7 +57,7 @@ int SPI_SendByte(uint8_t txData)
 {
     //Check to see if SPI is busy
     //If so return busy code
-    P1->OUT ^= BIT0; //Toggle LED for debugging
+    //P1->OUT ^= BIT0; //Toggle LED for debugging
     EUSCI_A3->TXBUF = txData;
     while(!SPI_TXFlag);
     SPI_TXFlag = 0;
