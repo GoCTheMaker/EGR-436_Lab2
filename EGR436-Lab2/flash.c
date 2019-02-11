@@ -298,7 +298,7 @@ int Flash_GetMemSize(uint16_t * free, uint16_t * total)
 //-----------------------------------------------------------------------------
 int Flash_ParseTitle(char * inString, char * outString)
 {
-    char searchString[5] = "\n\n";
+    char searchString[2] = "\n\n";
     char * fNameStart;
     char * fNameEnd;
     uint16_t fLen;

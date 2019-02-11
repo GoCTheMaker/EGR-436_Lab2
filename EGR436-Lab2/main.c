@@ -4,22 +4,35 @@
 #include "flash.h"
 #include "poems.h"
 #include <stdio.h>
+#include "hardware.h"
+#include "serial.h"
+#include "strings.h"
+
+
 
 
 /**
  * main.c
  */
+//Local Prototypes
+void InitHardware();
+void InitSoftware();
 
 void main(void)
 {
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
     InitHardware();
+    InitSoftware();
 
     //-------------------------------------------
 	uint8_t data[MAX_ADDR];
 	uint16_t len;
 	uint16_t addr, free, total;
 	uint8_t index;
+	uint8_t* command;
+	uint8_t* fileName;
+	uint8_t* fileTxt;
+	uint16_t* txtTemp;
 	//-------------------------------------------
 
 	//Tom, these functions below define the 6 functional requirements of the lab
@@ -54,10 +67,64 @@ void main(void)
 	Flash_DisplayIndex(data);
 
 
-	for(;;)
-	{
+	while (1)   //Main program loop
+	    {
 
-	}
+	        if(UARTFlag)    //Characters have been received but not full command
+	        {
+
+	            while(!CheckFullCommand());  //Look for newline character in the buffer
+
+	                ReadFromBuffer();   //Get full command
+
+                    command = calloc(MAX_CMD_SIZE,sizeof(char));
+                    strncpy(command,RxRead,RxReadTo);
+
+	                if (strstr(command, "STORE") != NULL)
+	                {
+	                   RxReadIndex++;
+	                   UART_ParseTitle(RxRead);
+	                   printf("%s",RxRead);
+
+	                }
+
+	                if (strstr(command, "CLEAR") != NULL)
+                    {
+	                    Flash_FormatDevice();
+
+                    }
+
+                    if (strstr(command, "DIR") != NULL)
+                    {
+                        Flash_DisplayIndex(data);
+                    }
+                    if (strstr(command, "MEM") != NULL)
+                    {
+                        Flash_GetMemSize(&free, &total);
+                    }
+
+                    if (strstr(command, "DELETE") != NULL)
+                    {
+                        Flash_DeleteFile(2);
+                    }
+
+
+
+
+
+
+	                if(1)
+	                {
+	                    EchoCommand();
+	                    //Echo Back BPM
+	                }
+	                else
+	                {
+	                    //Echo back error message
+	                }
+
+	        }
+	    }
 
 }
 
@@ -65,7 +132,20 @@ void InitHardware()
 {
     __disable_irq();
     SPI_PortInit();
+    UART0_init();
+    LedOutput_Init();
     __enable_irq();
+}
+
+
+void InitSoftware()
+{
+    UARTFlag = 0;
+
+    //Define pointer index
+    RxWriteIndex = 0;
+    RxReadIndex = 0;
+
 }
 /************************************
  * Operation of IRQ:
@@ -100,4 +180,13 @@ void EUSCIA3_IRQHandler(void)//Does not operate as intended at the moment
     }
     return;
 
+}
+
+void EUSCIA0_IRQHandler(void)
+{
+
+    RxBuffer[RxWriteIndex] = EUSCI_A0->RXBUF;   //Takes char from buffer and puts writes to serial buffer
+    RxWriteIndex = (RxWriteIndex + 1) % BUFFER_SIZE;    //Increments the circular buffer write index
+    P2->OUT ^= 2;   //Toggles led for debug
+    UARTFlag = 1;   //Set UART flag to begin parsing of the buffer
 }
