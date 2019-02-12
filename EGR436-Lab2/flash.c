@@ -145,7 +145,7 @@ int Flash_GetMaxIndex(uint8_t * index)
     {
         if(!indexData[i])
         {
-            *index = (i / 5) - 1;
+            *index = (i / 5);
             return 0;
         }
         //printf("Index %d: Addresses: %X - %X Activated %d\n", i / 5 , (index[i-4]<<8) | index[i-3], (index[i-2]<<8) | index[i-1], index[i]);
@@ -248,7 +248,7 @@ int Flash_DeleteFile(uint8_t index)
 
 
     Flash_GetMaxIndex(&maxIndex);
-    if(index > maxIndex)
+    if(index >= maxIndex)
     {
         return -1; //Unused index
     }
@@ -260,7 +260,7 @@ int Flash_DeleteFile(uint8_t index)
 
     Flash_ReadData(INDEX_START_ADDR, currIndex, INDEX_SIZE);//Debug check
 
-    for(i = index + 1; i <= maxIndex; i++)
+    for(i = index + 1; i < maxIndex; i++)
     {
         Flash_ReadFile(i, localData, &len);
         Flash_StoreFile(localData, len);
@@ -287,7 +287,7 @@ int Flash_GetMemSize(uint16_t * free, uint16_t * total)
 
     *total = MAX_ADDR - MIN_ADDR;
 
-    maxIndex = (maxIndex * 5) + 4;
+    maxIndex = ((maxIndex - 1) * 5) + 4;
 
     used = (localData[maxIndex - 2] << 8) | localData[maxIndex - 1]; //Last addr from initial used
 
@@ -298,7 +298,7 @@ int Flash_GetMemSize(uint16_t * free, uint16_t * total)
 //-----------------------------------------------------------------------------
 int Flash_ParseTitle(char * inString, char * outString)
 {
-    char searchString[5] = "\n\n";
+    char searchString[2] = "\n\n";
     char * fNameStart;
     char * fNameEnd;
     uint16_t fLen;
@@ -330,7 +330,7 @@ int Flash_DisplayIndex(uint8_t * data)
 
 
     Flash_GetMaxIndex(&maxIndex);
-    for(i = 0; i <= maxIndex; i++)
+    for(i = 0; i < maxIndex; i++)
     {
         Flash_ReadFile(i, localData, &len);
         Flash_ParseTitle(localData, parsedTitle);
@@ -338,6 +338,10 @@ int Flash_DisplayIndex(uint8_t * data)
         sprintf(temp, "Index %d, Size %dB : %s\n",i, len, parsedTitle);
         strcat(parsedTable, temp);
 
+    }
+    if(i == 0)
+    {
+        sprintf(data, "Nothing stored in Flash\n");
     }
     memcpy(data, parsedTable, strlen(parsedTable));
     return 0;
